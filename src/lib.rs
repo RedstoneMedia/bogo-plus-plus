@@ -63,7 +63,7 @@ fn score_one_everywhere<T: Ord>(data: &[T]) -> usize {
         .0
 }
 
-fn score_one<T: Ord>(data: &[T]) -> f64 {
+pub fn score_one_default<T: Ord>(data: &[T]) -> f64 {
     score_one_everywhere(data) as f64 * 0.45 + score_one_from_start(data) as f64 * 0.55
 }
 
@@ -110,13 +110,13 @@ pub trait Optimizer {
 
 
 #[derive(Clone, Debug)]
-pub struct SimpleOptimizer {
+pub struct AudentisOptimizer {
     ten_initial_mutation_chance: f64, // Initial mutation chance for a list of 10 elements
     exp_rate: f64,
     initial_mutation_chance: f64
 }
 
-impl Default for SimpleOptimizer {
+impl Default for AudentisOptimizer {
     fn default() -> Self {
         Self {
             ten_initial_mutation_chance: 0.22,
@@ -126,7 +126,7 @@ impl Default for SimpleOptimizer {
     }
 }
 
-impl SimpleOptimizer {
+impl AudentisOptimizer {
 
     pub fn new(ten_initial_mutation_chance: f64, decay: f64) -> Self {
         Self {
@@ -138,7 +138,7 @@ impl SimpleOptimizer {
 
 }
 
-impl Optimizer for SimpleOptimizer {
+impl Optimizer for AudentisOptimizer {
     fn start(&mut self, data_length: usize) {
         self.initial_mutation_chance = self.ten_initial_mutation_chance * 10.0 / data_length as f64;
     }
@@ -150,19 +150,19 @@ impl Optimizer for SimpleOptimizer {
 
 
 #[derive(Clone, Debug)]
-pub struct ComplexOptimizer {
-    simple: SimpleOptimizer,
+pub struct AestimaboOptimizer {
+    audentis: AudentisOptimizer,
     last_done_fraction: f64,
     stuck_mutation_change: f64,
     stuck_decrease_by: f64,
     omega_factor: f64,
 }
 
-impl ComplexOptimizer {
+impl AestimaboOptimizer {
 
-    pub fn new(simple_optimizer: SimpleOptimizer, stuck_decrease_by: f64, omega_factor: f64) -> Self {
+    pub fn new(audentis_optimizer: AudentisOptimizer, stuck_decrease_by: f64, omega_factor: f64) -> Self {
         Self {
-            simple: simple_optimizer,
+            audentis: audentis_optimizer,
             last_done_fraction: 0.0,
             stuck_mutation_change: 0.0,
             omega_factor,
@@ -172,9 +172,9 @@ impl ComplexOptimizer {
 
 }
 
-impl Optimizer for ComplexOptimizer {
+impl Optimizer for AestimaboOptimizer {
     fn start(&mut self, data_length: usize) {
-        self.simple.start(data_length);
+        self.audentis.start(data_length);
         self.last_done_fraction = f64::NAN;
     }
 
@@ -185,7 +185,7 @@ impl Optimizer for ComplexOptimizer {
             self.stuck_mutation_change /= self.omega_factor;
         }
         self.last_done_fraction = last_done_fraction;
-        let mut mutation_chance = self.simple.get_mutation_chance(last_done_fraction);
+        let mut mutation_chance = self.audentis.get_mutation_chance(last_done_fraction);
         mutation_chance += mutation_chance * self.stuck_mutation_change.clamp(-1.0, 1.0) / 1.1;
         mutation_chance
     }
@@ -201,14 +201,14 @@ pub struct BogoConfig<O: Optimizer, T: Send + Sync + Debug + Copy + Clone + Ord 
     pub scoring_function: fn(&[T]) -> f64
 }
 
-impl<T: Send + Sync + Debug + Copy + Clone + Ord + PartialEq> Default for BogoConfig<SimpleOptimizer, fn(&[T]) -> f64> {
+impl<T: Send + Sync + Debug + Copy + Clone + Ord + PartialEq> Default for BogoConfig<AudentisOptimizer, fn(&[T]) -> f64> {
     fn default() -> Self {
         Self {
             give_up_count: usize::MAX,
             verbose: true,
             population_size: 64,
-            optimizer: SimpleOptimizer::default(),
-            scoring_function: score_one
+            optimizer: AudentisOptimizer::default(),
+            scoring_function: score_one_default
         }
     }
 }
@@ -359,14 +359,14 @@ mod test {
             mutate_one(&mut vec, 1.0);
         }
         // Config
-        let simple = SimpleOptimizer::new(0.22, 1.3);
-        let optimizer = ComplexOptimizer::new(simple, 0.00001, 2.5);
+        let audentis = AudentisOptimizer::new(0.22, 1.3);
+        let optimizer = AestimaboOptimizer::new(audentis, 0.00001, 2.5);
         let mut config = BogoConfig {
             give_up_count: 400000,
             verbose: true,
             population_size: 80,
             optimizer,
-            scoring_function: score_one
+            scoring_function: score_one_default
         };
         // Sort
         let sorting = BogoSorting::new(&vec, &mut config);
