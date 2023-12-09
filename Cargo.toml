@@ -2,6 +2,13 @@
 name = "bogo-plus-plus"
 version = "2.0.0"
 edition = "2021"
+repository = "https://github.com/RedstoneMedia/bogo-plus-plus"
+homepage = "https://github.com/RedstoneMedia/bogo-plus-plus"
+description = "Blazingly fast 🚀 AI 🤖 Powered Sorting algorithm"
+license-file = "LICENSE"
+keywords = ["sorting", "AI", "Blazingly-Fast", "bogo", "genetic"]
+categories = ["algorithms"]
+exclude = ["images/", ".*"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
