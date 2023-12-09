@@ -3,7 +3,7 @@ AI 🤖 Powered Sorting algorithm with a <span style="color: transparent">best c
 
 
 ## Why you should use Bogo++
-- Unlike basic Bogosort, Bogo++ uses a genetic algorithm 🧬 and ist multithreaded 🚀🚀🚀.
+- Unlike basic Bogosort, Bogo++ uses a genetic algorithm 🧬 and is multithreaded 🚀🚀🚀.
 - Bogo++ works best when maximum sorting speed is needed
 - Bogo++ has an easy-to-use Interface
 
