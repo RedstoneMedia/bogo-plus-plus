@@ -1,11 +1,11 @@
 [package]
 name = "bogo-plus-plus"
-version = "2.1.0"
+version = "2.1.1"
 edition = "2021"
 repository = "https://github.com/RedstoneMedia/bogo-plus-plus"
 homepage = "https://github.com/RedstoneMedia/bogo-plus-plus"
 description = "Blazingly fast 🚀 AI 🤖 Powered Sorting algorithm"
-license-file = "LICENSE"
+license = "GPL-3.0"
 keywords = ["sorting", "AI", "Blazingly-Fast", "bogo", "genetic"]
 categories = ["algorithms"]
 exclude = ["images/", ".*"]
