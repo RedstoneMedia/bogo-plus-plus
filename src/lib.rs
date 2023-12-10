@@ -96,7 +96,7 @@ fn conform_to_best<T: Ord + Copy + Sync + Send>(population: &mut [Vec<T>], last_
     (best_score, best_i)
 }
 
-
+/// A Optimizer is used in a Sorting to get the mutation_chance for each epoch
 pub trait Optimizer {
 
     /// Gets called once before each training session
@@ -109,6 +109,7 @@ pub trait Optimizer {
 }
 
 
+/// Audentis is a simple Optimizer that drops the mutation chance off exponentially starting at a certain value
 #[derive(Clone, Debug)]
 pub struct AudentisOptimizer {
     ten_initial_mutation_chance: f64, // Initial mutation chance for a list of 10 elements
@@ -149,6 +150,7 @@ impl Optimizer for AudentisOptimizer {
 }
 
 
+/// Aestimabo is a superset of the Audentis Optimizer, that tries to react to more dynamically adapt the mutation chance, when issues arise.
 #[derive(Clone, Debug)]
 pub struct AestimaboOptimizer {
     audentis: AudentisOptimizer,
@@ -192,6 +194,7 @@ impl Optimizer for AestimaboOptimizer {
 }
 
 
+/// A Config for the `BogoSorting` Sorting
 #[derive(Clone, Debug)]
 pub struct BogoConfig<O: Optimizer, T: Send + Sync + Debug + Copy + Clone + Ord + PartialEq> {
     pub give_up_count: usize,
@@ -213,10 +216,14 @@ impl<T: Send + Sync + Debug + Copy + Clone + Ord + PartialEq> Default for BogoCo
     }
 }
 
+/// A SortingResultKind defines the Result of a Sorting
 #[derive(Debug)]
 pub enum SortingResultKind<T: Ord + Copy + Sync + Send + Debug + Clone + PartialEq> {
+    /// The Sorting was Successful, contains sorted data
     SortingWasOkKindResult(Vec<T>),
+    /// The Sorting was Incomplete, contains possibly partially data
     SortingWasIncompleteKindResult(Vec<T>),
+    /// The Sorting was Erroneous, contains a Error value
     SortingWasErroneousKindResult(Box<dyn Error>)
 }
 
@@ -251,6 +258,7 @@ impl<T: Ord + Copy + Sync + Send + Debug + Clone + PartialEq> PartialEq for &Sor
 }
 
 
+/// A Sorting result that holds a `SortingResultKind`
 pub struct SortingResult<'a, T: Ord + Copy + Sync + Send + Debug + Clone + PartialEq, C: ?Sized> {
     inner: SortingResultKind<T>,
     config: &'a mut C
@@ -274,15 +282,38 @@ impl<'a, T: Ord + Copy + Sync + Send + Debug + Clone + PartialEq, C: ?Sized> Fro
     }
 }
 
-trait Sorting<'a, 'b, T: Ord + Copy + Sync + Send + Debug + Clone + PartialEq, C: ?Sized> {
+/// A trait to support Generic Sorting implementations
+pub trait Sorting<'a, 'b, T: Ord + Copy + Sync + Send + Debug + Clone + PartialEq, C: ?Sized> {
 
+    /// Creates a Sorting bound to some data and some Config
     fn new(data: &'a [T], config: &'b mut C) -> Self where Self: Sized;
 
+    /// Obtain a sorting Result from a Sorting, by sorting the data. \
+    /// This call consumes the Sorting
     fn sorting_get_sorted_result(self) -> SortingResult<'b, T, C>;
 
 }
 
-
+/// Bogo++ Sorting
+/// Example usage:
+/// ```
+/// use bogo_plus_plus::{AudentisOptimizer, BogoConfig, BogoSorting, SortingResultKind, score_one_default, Sorting};
+/// let optimizer = AudentisOptimizer::default();
+/// let mut config = BogoConfig {
+///     give_up_count: 1000,
+///     verbose: false,
+///     population_size: 10,
+///     optimizer,
+///     scoring_function: score_one_default
+/// };
+/// // Sort
+/// let data = vec![1, -1, 10, 3, 12, 3, 100];
+/// let sorting = BogoSorting::new(&data, &mut config);
+/// let result = sorting.sorting_get_sorted_result();
+/// let result_kind = result.get_inner_sorting_result_kind();
+/// assert_eq!(result_kind, &SortingResultKind::SortingWasOkKindResult(vec![-1, 1, 3, 3, 10, 12, 100]));
+/// ```
+/// This sorts the list `[1, -1, 10, 3, 12, 3, 100]` using the `BogoSorting` and the Audentis optimizer.
 pub struct BogoSorting<'a, 'b, O: Optimizer, T: Ord + Copy + Sync + Send + Debug + Clone + PartialEq> {
     population: Vec<Vec<T>>,
     data: &'a [T],
